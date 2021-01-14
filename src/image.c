@@ -2,79 +2,24 @@
 #include <stdlib.h>
 
 #include "image.h"
+#include "utils.h"
 
-Image *readImage(const char *filename) {
-    
-    char buffer[16];
-    Image *img;
-    FILE *fp;
-    int c, rgb_comp;
-
-    fp = fopen(filename, "rb");
-    if (!fp) {
-        fprintf(stderr, "Error opening the file %s.\n", filename);
-        exit(-1);
-    }
-
-    if (!fgets(buffer, sizeof(buffer), fp)) {
-        perror(filename);
-        exit(-1);
-    }
-    
-    //check the image format
-    if (buffer[0] != 'P' || buffer[1] != '6') {
-         fprintf(stderr, "Invalid image format (must be 'P6')\n");
-         exit(-1);
-    }
-
-    //alloc memory form image
-    img = (Image *)malloc(sizeof(Image));
-    if (!img) {
-         fprintf(stderr, "Unable to allocate memory\n");
-         exit(1);
-    }
-
-    //check for comments
-    c = getc(fp);
-    while (c == '#') {
-    while (getc(fp) != '\n') ;
-         c = getc(fp);
-    }
-
-    ungetc(c, fp);
-    //read image size information
-    if (fscanf(fp, "%d %d", &img->width, &img->height) != 2) {
-         fprintf(stderr, "Invalid image size (error loading '%s')\n", filename);
-         exit(1);
-    }
-
-    //read rgb component
-    if (fscanf(fp, "%d", &rgb_comp) != 1) {
-         fprintf(stderr, "Invalid rgb component (error loading '%s')\n", filename);
-         exit(1);
-    }
-
-    //check rgb component depth
-    if (rgb_comp != RGB_COMPONENT_COLOR) {
-         fprintf(stderr, "'%s' does not have 8-bits components\n", filename);
-         exit(1);
-    }
-
-    while (fgetc(fp) != '\n');
-
-    img->data = (PPMPixel*) malloc(img->width * img->height * sizeof(PPMPixel));
-
-    if (!img) {
-        fprintf(stderr, "Unable to allocate memory\n");
-        exit(1);
-    }
-
-    if (fread(img->data, RGB_SIZE * img->width, img->height, fp) != img->height) {
-         fprintf(stderr, "Error loading image '%s'\n", filename);
-         exit(1);
-    }
-
-    fclose(fp);
-    
-    return img;
+/*
+* Generates a random image.
+* W - Width of image
+* H - Height of image
+* C - Number of channels (RGB=3, GrayScale=1)
+* ptr_image - Pointer to the image
+*/
+void randomImage(int W, int H, int C, float *ptr_image) {
+     int addr1, addr;
+     for (int c=0; c < C; c++) {
+          addr1 = c * (H * W);
+          for (int h=0; h < H; h++) {
+               for (int w=0; w < W; w++) {
+                    addr = addr1 + w + h*W;
+                    ptr_image[addr] = random_float(0.0, 255.0);
+               }
+          }
+     }
 }

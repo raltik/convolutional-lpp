@@ -1,30 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "image.h"
 
 int main(int argc, char **argv) {
     
-    const char *file = "./dog.ppm";
-    Image *img = readImage(file);
+    int W = 1920;
+    int H = 1080;
+    int C = 3;
 
+    float *image = (float *) malloc(W * H * C * sizeof(float));
 
-    //TEST
-    
-    int H = img->height;
-    int W = img->width;
+    randomImage(W, H, C, image);
 
-    for (int h=0; h < 2; h++) {
-        for (int w=0; w < 10; w++) {
-            int index = w + (h * W);
-            
-            PPMPixel pix = img->data[index];
-
-            printf("Index: %3d\n", index);
-            printf("\tRed: %3d\n", pix.red);
-            printf("\tGreen: %3d\n", pix.green);
-            printf("\tBlue: %3d\n", pix.blue);
-
-        }
-    }
+    // int addr1, addr = 0;
+    // for (int c=0; c < C; c++) {
+    //     printf("\nCHANNEL %2d\n\n", c);
+    //       addr1 = c * (H * W);
+    //       for (int h=0; h < H; h++) {
+    //            for (int w=0; w < W; w++) {
+    //                 addr = addr1 + w + h*W;
+    //                 printf("%3.1f, ", image[addr]);
+    //            }
+    //            printf("\n");
+    //       }
+    //  }
 
 }

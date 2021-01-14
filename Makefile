@@ -1,5 +1,5 @@
-CC      := gcc
-CFLAGS := -pedantic-errors -Wall
+CC       := gcc
+CFLAGS   := -pedantic-errors -Wall
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
 OBJ_DIR  := ./obj
 APP_DIR  := .
@@ -22,7 +22,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release info
+.PHONY: all build clean debug release
 
 build:
 	@mkdir -p $(APP_DIR)
