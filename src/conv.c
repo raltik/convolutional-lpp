@@ -9,13 +9,11 @@
 * 
 *   COUT - Channels OUT
 */
-void generate_random_bias(int COUT) {
-    int size = CHANNELS_OUT;
-
-    bias = (float *) malloc(size * sizeof(float));
+void generate_random_bias(int COUT, float *ptr_bias) {
+    int size = COUT;
 
     for (int co=0; co < size; co++) {
-        bias[co] = random_float(-1.0, 1.0); 
+        ptr_bias[co] = random_float(-1.0, 1.0); 
     }
 }
 
@@ -25,13 +23,11 @@ void generate_random_bias(int COUT) {
 *   CIN  - Channels IN
 *   COUT - Channels OUT
 */
-void generate_random_kernels(int CIN, int COUT) {
+void generate_random_kernels(int CIN, int COUT, float *ptr_kernels) {
     int size = KERNEL_HEIGHT * KERNEL_WIDTH * COUT * CIN;
 
-    kernels = (float *) malloc(size * sizeof(float));
-
     for (int i=0; i < size; i++) {
-        kernels[i] = random_float(-1.0, 1.0);
+        ptr_kernels[i] = random_float(-1.0, 1.0);
     }
 }
 
@@ -46,7 +42,7 @@ void generate_random_kernels(int CIN, int COUT) {
 * ptr_in - Pointer to the input image
 * ptr_out - Pointer to the output
 */
-void convolutional(int W, int H, int CIN, int COUT, float *ptr_in, float *ptr_out) {
+void convolutional(int W, int H, int CIN, int COUT, float **ptr_in, float **ptr_out, float *ptr_kernels, float *ptr_bias) {
     int addr_in, addr_out;
 
     int WIDTH_OUT  = (int) ((W - KERNEL_WIDTH + 2 * PADDING_WIDTH) / STRIDE_WIDTH + 1);
@@ -57,22 +53,21 @@ void convolutional(int W, int H, int CIN, int COUT, float *ptr_in, float *ptr_ou
             
             for (int hi=0; hi < HEIGHT_OUT + 2; hi++) { // Sumamos 2 para tener en cuenta el padding.
                 for (int wi=0; wi < WIDTH_OUT + 2; wi++) {
-                    addr_out = wi + hi * WIDTH_OUT + co * (WIDTH_OUT * HEIGHT_OUT);
+                    addr_out = wi + hi * WIDTH_OUT;
 
                     for (int kh=0; kh < KERNEL_HEIGHT; kh++) {
                         for (int kw=0; kw < KERNEL_WIDTH; kw++) {
                             int idx_h = (hi * STRIDE_HEIGHT) + kh;
                             int idx_w = (wi * STRIDE_WIDTH) + kw;
-                            int idx = idx_w + idx_h * W;
-                            addr_in = idx + (ci * W * H);
+                            addr_in = idx_w + idx_h * W;
 
                             int addr_k = kh + kw + (co * KERNEL_HEIGHT * KERNEL_WIDTH) + (ci * KERNEL_HEIGHT * KERNEL_WIDTH);
-
-                            ptr_out[addr_out] += ptr_in[addr_in] * kernels[addr_k];
+                            printf("%d\n", addr_in);
+                            ptr_out[addr_out][co] += ptr_in[addr_in][ci] * ptr_kernels[addr_k];
                         }
                     }
 
-                    ptr_out[addr_out] += bias[co]; // Add bias
+                    ptr_out[addr_out][co] += ptr_bias[co]; // Add bias
                 }
             }
         }
