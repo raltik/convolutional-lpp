@@ -55,8 +55,8 @@ void convolutional(int W, int H, int CIN, int COUT, float *ptr_in, float *ptr_ou
     for (int co=0; co < COUT; co++) {
         for (int ci=0; ci < CIN; ci++) {
             
-            for (int hi=0; hi < HEIGHT_OUT; hi++) {
-                for (int wi=0; wi < WIDTH_OUT; wi++) {
+            for (int hi=0; hi < HEIGHT_OUT + 2; hi++) { // Sumamos 2 para tener en cuenta el padding.
+                for (int wi=0; wi < WIDTH_OUT + 2; wi++) {
                     addr_out = wi + hi * WIDTH_OUT + co * (WIDTH_OUT * HEIGHT_OUT);
 
                     for (int kh=0; kh < KERNEL_HEIGHT; kh++) {

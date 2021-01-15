@@ -1,10 +1,10 @@
 CC       := gcc
-CFLAGS   := -pedantic-errors -Wall
-LDFLAGS  := -L/usr/lib -lstdc++ -lm
+CFLAGS   := -pedantic-errors -Wall -pthread
+LDFLAGS  := -L/usr/lib -lstdc++ -lm -lmpi
 OBJ_DIR  := ./obj
 APP_DIR  := .
 TARGET   := conv
-INCLUDE  := -Iinclude/
+INCLUDE  := -Iinclude/ -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include 
 SRC      := $(wildcard src/*.c)
 
 OBJECTS  := $(SRC:%.c=$(OBJ_DIR)/%.o)

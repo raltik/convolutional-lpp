@@ -1,26 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <mpi.h>
 
 #include "image.h"
 #include "conv.h"
+#include "utils.h"
+
+#define WI 10
+#define HI 10
+#define CI 1
+#define CO 1
 
 int main(int argc, char **argv) {
+    int procs, rank;
     
-    int W = 1920;
-    int H = 1080;
-    int C = 3;
-    int CO = 64;
+    MPI_Init(&argc, &argv);
 
-    float *image = (float *) malloc(W * H * C * sizeof(float));
-    float *output = (float *) malloc(W * H * CO * sizeof(float));
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
-    randomImage(W, H, C, image);
+    if (rank == 0) { // Root
+        float *image = allocate_data(WI+2, HI+2, CI); //Sumamos 2 para tener en cuenta el padding.
+        float *output = allocate_data(WI, HI, CO);
 
-    generate_random_bias(CO);
-    generate_random_kernels(C, CO);
+        randomImage(WI+2, HI+2, CI, image); // Sumamos 2 para tener en cuenta el padding.
+        generate_random_bias(CO);
+        generate_random_kernels(CI, CO);
+    }
 
-    convolutional(W, H, C, CO, image, output);
-
-
-
+    MPI_Finalize();
 }
