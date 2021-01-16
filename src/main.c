@@ -60,13 +60,18 @@ int main(int argc, char **argv) {
         
         MPI_Recv(&image_loc, wi_proc * hi_proc, struct_mpi, 0, 1234, MPI_COMM_WORLD, &status);
         
+        char buf[10];
+
         for (int i=0; i < hi_proc; i++) {
             for (int j=0; j < wi_proc; j++) {
                 int addr = j + i * wi_proc;
-                printf("%2.2f, ", image_loc[addr].channels[0]);
+                float x = image_loc[addr].channels[0];
+                gcvt(x, 4, buf);
+                printf("%6s, ", buf);
             }
             printf("\n");
         }
+        printf("\n\n");
     }  
 
 

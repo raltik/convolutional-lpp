@@ -1,10 +1,10 @@
-CC       := gcc
-CFLAGS   :=  -pthread
-LDFLAGS  := -L/usr/lib -lstdc++ -lm -lmpi
+CC       := mpicc
+CFLAGS   := 
+LDFLAGS  := -L/usr/lib -lstdc++ -lm
 OBJ_DIR  := ./obj
 APP_DIR  := .
 TARGET   := conv
-INCLUDE  := -Iinclude/ -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include 
+INCLUDE  := -Iinclude/ 
 SRC      := $(wildcard src/*.c)
 
 OBJECTS  := $(SRC:%.c=$(OBJ_DIR)/%.o)

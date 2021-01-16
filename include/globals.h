@@ -1,5 +1,5 @@
-#define WI 8
-#define HI 8
+#define WI 16
+#define HI 16
 #define CI 1
 #define CO 1
 
