@@ -3,9 +3,6 @@
 data_in_t *image;
 data_out_t *output;
 
-data_in_t *image_loc;
-data_out_t *output_loc;
-
 float *bias;
 float *kernels;
 
@@ -13,6 +10,12 @@ int main(int argc, char **argv) {
     int procs, rank;
     int size_image, size_loc, size_kernels;
     int wi_proc, hi_proc;
+
+    wi_proc = WI;
+    hi_proc = (HI / 2) + 1;
+
+    data_in_t image_loc[wi_proc * hi_proc];
+    data_out_t output_loc[wi_proc * hi_proc];
     
     MPI_Init(&argc, &argv);
 
@@ -30,12 +33,7 @@ int main(int argc, char **argv) {
     //
 
     MPI_Status status;
-
-    wi_proc = WI;
-    hi_proc = (HI / 2) + 1;
     
-    image_loc = (data_in_t *) malloc(wi_proc * hi_proc * sizeof(data_in_t));
-    output_loc = (data_out_t *) malloc(wi_proc * hi_proc * sizeof(data_out_t));
     bias = (float *) malloc(CO * sizeof(float));
     kernels = (float *) malloc(KERNEL_WIDTH * KERNEL_HEIGHT * CI * CO * sizeof(float));
 
@@ -52,12 +50,23 @@ int main(int argc, char **argv) {
         output = (data_out_t *) malloc(WI * HI * sizeof(data_out_t));
 
         randomImage(WI, HI, CI, image); // Sumamos 2 para tener en cuenta el padding.
-
-        MPI_Send(&image, wi_proc * hi_proc, struct_mpi, 1, 1234, MPI_COMM_WORLD);
+        
+        for (int i=1; i < procs; i++) {
+            int offset = (i * wi_proc * hi_proc) - 2 * wi_proc;
+            printf("%d\n", offset);
+            MPI_Send(&image[offset], wi_proc * hi_proc, struct_mpi, i, 1234, MPI_COMM_WORLD);
+        }
     } else {
+        
         MPI_Recv(&image_loc, wi_proc * hi_proc, struct_mpi, 0, 1234, MPI_COMM_WORLD, &status);
-
-        printf("%f\n", image_loc[0].channels[0]);
+        
+        for (int i=0; i < hi_proc; i++) {
+            for (int j=0; j < wi_proc; j++) {
+                int addr = j + i * wi_proc;
+                printf("%2.2f, ", image_loc[addr].channels[0]);
+            }
+            printf("\n");
+        }
     }  
 
 

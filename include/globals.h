@@ -1,7 +1,7 @@
 #define WI 8
 #define HI 8
-#define CI 2
-#define CO 2
+#define CI 1
+#define CO 1
 
 #define KERNEL_WIDTH  3
 #define KERNEL_HEIGHT 3
