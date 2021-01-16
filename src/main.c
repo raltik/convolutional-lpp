@@ -10,13 +10,8 @@ int main(int argc, char **argv) {
     int procs, rank;
     int size_image, size_loc, size_kernels;
     int wi_proc, hi_proc;
-
-    wi_proc = WI;
-    hi_proc = (HI / 2) + 1;
-
-    data_in_t image_loc[wi_proc * hi_proc];
-    data_out_t output_loc[wi_proc * hi_proc];
-    
+   
+   
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -31,6 +26,12 @@ int main(int argc, char **argv) {
     MPI_Type_create_struct(1, blocklen, disps, type, &struct_mpi);
     MPI_Type_commit(&struct_mpi);
     //
+
+    wi_proc = WI;
+    hi_proc = (HI / 2) + 1;
+
+    data_in_t image_loc[wi_proc * hi_proc];
+    data_out_t output_loc[wi_proc * hi_proc];
 
     MPI_Status status;
     
@@ -56,22 +57,26 @@ int main(int argc, char **argv) {
             printf("%d\n", offset);
             MPI_Send(&image[offset], wi_proc * hi_proc, struct_mpi, i, 1234, MPI_COMM_WORLD);
         }
+
+        convolutional(wi_proc, hi_proc, CI, CO, image, output, kernels, bias, 0);
+
+
     } else {
         
         MPI_Recv(&image_loc, wi_proc * hi_proc, struct_mpi, 0, 1234, MPI_COMM_WORLD, &status);
         
-        char buf[10];
+        convolutional(wi_proc, hi_proc, CI, CO, image_loc, output_loc, kernels, bias, 1);
 
-        for (int i=0; i < hi_proc; i++) {
-            for (int j=0; j < wi_proc; j++) {
-                int addr = j + i * wi_proc;
-                float x = image_loc[addr].channels[0];
-                gcvt(x, 4, buf);
-                printf("%6s, ", buf);
-            }
-            printf("\n");
-        }
-        printf("\n\n");
+        // for (int i=0; i < hi_proc; i++) {
+        //     for (int j=0; j < wi_proc; j++) {
+        //         int addr = j + i * wi_proc;
+        //         float x = image_loc[addr].channels[0];
+        //         gcvt(x, 4, buf);
+        //         printf("%2.2f, ", x);
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\n\n");
     }  
 
 

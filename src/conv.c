@@ -39,11 +39,12 @@ void generate_random_kernels(int CIN, int COUT, float *ptr_kernels) {
 * ptr_out - Pointer to the output
 */
 void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_t *ptr_out, float *ptr_kernels, float *ptr_bias, int rank) {
-    int addr_in, addr_out;
+    int addr_out;
 
     int WIDTH_OUT  = (int) ((W - KERNEL_WIDTH + 2 * PADDING_WIDTH) / STRIDE_WIDTH + 1);
     int HEIGHT_OUT = (int) ((H - KERNEL_HEIGHT + 2 * PADDING_HEIGHT) / STRIDE_HEIGHT + 1);
 
+    #pragma omp parallel for private(addr_out)
     for (int co=0; co < COUT; co++) {
         for (int ci=0; ci < CIN; ci++) {
             
@@ -56,15 +57,12 @@ void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_
                             int idx_h = (hi * STRIDE_HEIGHT) + kh;
                             int idx_w = (wi * STRIDE_WIDTH) + kw;
                             int idx = idx_w + idx_h * W;
-                            addr_in = idx + (ci * W * H);
 
                             int addr_k = kh + kw + (co * KERNEL_HEIGHT * KERNEL_WIDTH) + (ci * KERNEL_HEIGHT * KERNEL_WIDTH);
-                            if (rank==1) printf("IN: %d, OUT: %d\n", addr_in, addr_out);
+                            
                             ptr_out[addr_out].channels[co] += ptr_in[idx].channels[ci] * ptr_kernels[addr_k];
-                            if (rank==1) printf("%d\n");
                         }
                     }
-                    if (rank == 1) printf("XD %d\n", addr_in);
                     ptr_out[addr_out].channels[co] += ptr_bias[co]; // Add bias
                 }
             }
