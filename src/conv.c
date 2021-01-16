@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "conv.h"
-#include "utils.h"
+#include "main.h"
 
 /*
 * Allocates and generates random values for the bias.
@@ -42,7 +38,7 @@ void generate_random_kernels(int CIN, int COUT, float *ptr_kernels) {
 * ptr_in - Pointer to the input image
 * ptr_out - Pointer to the output
 */
-void convolutional(int W, int H, int CIN, int COUT, float **ptr_in, float **ptr_out, float *ptr_kernels, float *ptr_bias) {
+void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_t *ptr_out, float *ptr_kernels, float *ptr_bias, int rank) {
     int addr_in, addr_out;
 
     int WIDTH_OUT  = (int) ((W - KERNEL_WIDTH + 2 * PADDING_WIDTH) / STRIDE_WIDTH + 1);
@@ -51,23 +47,25 @@ void convolutional(int W, int H, int CIN, int COUT, float **ptr_in, float **ptr_
     for (int co=0; co < COUT; co++) {
         for (int ci=0; ci < CIN; ci++) {
             
-            for (int hi=0; hi < HEIGHT_OUT + 2; hi++) { // Sumamos 2 para tener en cuenta el padding.
-                for (int wi=0; wi < WIDTH_OUT + 2; wi++) {
+            for (int hi=0; hi < HEIGHT_OUT; hi++) { // Sumamos 2 para tener en cuenta el padding.
+                for (int wi=0; wi < WIDTH_OUT; wi++) {
                     addr_out = wi + hi * WIDTH_OUT;
 
                     for (int kh=0; kh < KERNEL_HEIGHT; kh++) {
                         for (int kw=0; kw < KERNEL_WIDTH; kw++) {
                             int idx_h = (hi * STRIDE_HEIGHT) + kh;
                             int idx_w = (wi * STRIDE_WIDTH) + kw;
-                            addr_in = idx_w + idx_h * W;
+                            int idx = idx_w + idx_h * W;
+                            addr_in = idx + (ci * W * H);
 
                             int addr_k = kh + kw + (co * KERNEL_HEIGHT * KERNEL_WIDTH) + (ci * KERNEL_HEIGHT * KERNEL_WIDTH);
-                            printf("%d\n", addr_in);
-                            ptr_out[addr_out][co] += ptr_in[addr_in][ci] * ptr_kernels[addr_k];
+                            if (rank==1) printf("IN: %d, OUT: %d\n", addr_in, addr_out);
+                            ptr_out[addr_out].channels[co] += ptr_in[idx].channels[ci] * ptr_kernels[addr_k];
+                            if (rank==1) printf("%d\n");
                         }
                     }
-
-                    ptr_out[addr_out][co] += ptr_bias[co]; // Add bias
+                    if (rank == 1) printf("XD %d\n", addr_in);
+                    ptr_out[addr_out].channels[co] += ptr_bias[co]; // Add bias
                 }
             }
         }

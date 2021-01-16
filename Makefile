@@ -1,5 +1,5 @@
 CC       := gcc
-CFLAGS   := -pedantic-errors -Wall -pthread
+CFLAGS   :=  -pthread
 LDFLAGS  := -L/usr/lib -lstdc++ -lm -lmpi
 OBJ_DIR  := ./obj
 APP_DIR  := .
