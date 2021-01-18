@@ -1,6 +1,6 @@
-#define WI 200
-#define HI 200
-#define CI 16
+#define WI 1920
+#define HI 1080
+#define CI 3
 #define CO 16
 
 #define KERNEL_WIDTH  3

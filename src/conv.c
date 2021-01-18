@@ -44,7 +44,7 @@ void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_
     int WIDTH_OUT  = (int) ((W - KERNEL_WIDTH + 2 * PADDING_WIDTH) / STRIDE_WIDTH + 1);
     int HEIGHT_OUT = (int) ((H - KERNEL_HEIGHT + 2 * PADDING_HEIGHT) / STRIDE_HEIGHT + 1);
 
-    #pragma omp parallel for private(addr_out)
+    //#pragma omp parallel for private(addr_out)
     for (int co=0; co < COUT; co++) {
         for (int ci=0; ci < CIN; ci++) {
             

@@ -17,15 +17,18 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
-    // Struct MPI
-    MPI_Datatype struct_mpi;
+    MPI_Datatype in_struct, out_struct;
     MPI_Datatype type[1] = {MPI_FLOAT};
-    int blocklen[1] = {CO};
+    int blocklen[1] = {CI};
     MPI_Aint disps[1] = {0};
 
-    MPI_Type_create_struct(1, blocklen, disps, type, &struct_mpi);
-    MPI_Type_commit(&struct_mpi);
-    //
+    MPI_Type_create_struct(1, blocklen, disps, type, &in_struct);
+    MPI_Type_commit(&in_struct);
+
+    blocklen[0] = CO;
+    MPI_Type_create_struct(1, blocklen, disps, type, &out_struct);
+    MPI_Type_commit(&out_struct);
+
 
     wi_proc = WI;
     hi_proc = (HI / 2) + 1;
@@ -54,29 +57,26 @@ int main(int argc, char **argv) {
         
         for (int i=1; i < procs; i++) {
             int offset = (i * wi_proc * hi_proc) - 2 * wi_proc;
-            printf("%d\n", offset);
-            MPI_Send(&image[offset], wi_proc * hi_proc, struct_mpi, i, 1234, MPI_COMM_WORLD);
+            
+            MPI_Ssend(&image[offset], wi_proc * hi_proc, in_struct, i, 1234, MPI_COMM_WORLD);
         }
 
         convolutional(wi_proc, hi_proc, CI, CO, image, output, kernels, bias, 0);
 
+        for (int i=1; i < procs; i++) {
+            int offset = (i * wi_proc * hi_proc) - 2 * wi_proc;
+
+            MPI_Recv(&output[offset], wi_proc * hi_proc, out_struct, i, 1234, MPI_COMM_WORLD, &status);
+        }
 
     } else {
         
-        MPI_Recv(&image_loc, wi_proc * hi_proc, struct_mpi, 0, 1234, MPI_COMM_WORLD, &status);
+        MPI_Recv(&image_loc, wi_proc * hi_proc, in_struct, 0, 1234, MPI_COMM_WORLD, &status);
         
         convolutional(wi_proc, hi_proc, CI, CO, image_loc, output_loc, kernels, bias, 1);
 
-        // for (int i=0; i < hi_proc; i++) {
-        //     for (int j=0; j < wi_proc; j++) {
-        //         int addr = j + i * wi_proc;
-        //         float x = image_loc[addr].channels[0];
-        //         gcvt(x, 4, buf);
-        //         printf("%2.2f, ", x);
-        //     }
-        //     printf("\n");
-        // }
-        // printf("\n\n");
+        MPI_Ssend(&output_loc, wi_proc * hi_proc, out_struct, 0, 1234, MPI_COMM_WORLD);
+        
     }  
 
 
