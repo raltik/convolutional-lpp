@@ -38,17 +38,16 @@ void generate_random_kernels(int CIN, int COUT, float *ptr_kernels) {
 * ptr_in - Pointer to the input image
 * ptr_out - Pointer to the output
 */
-void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_t *ptr_out, float *ptr_kernels, float *ptr_bias, int rank) {
+void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_t *ptr_out, float *ptr_kernels, float *ptr_bias, int offset) {
     int addr_out;
-
     int WIDTH_OUT  = (int) ((W - KERNEL_WIDTH + 2 * PADDING_WIDTH) / STRIDE_WIDTH + 1);
     int HEIGHT_OUT = (int) ((H - KERNEL_HEIGHT + 2 * PADDING_HEIGHT) / STRIDE_HEIGHT + 1);
 
-    //#pragma omp parallel for private(addr_out)
+    if (offset < 0) offset=0;
+
     for (int co=0; co < COUT; co++) {
         for (int ci=0; ci < CIN; ci++) {
-            
-            for (int hi=0; hi < HEIGHT_OUT; hi++) { // Sumamos 2 para tener en cuenta el padding.
+            for (int hi=0; hi < HEIGHT_OUT; hi++) { 
                 for (int wi=0; wi < WIDTH_OUT; wi++) {
                     addr_out = wi + hi * WIDTH_OUT;
 
@@ -56,14 +55,14 @@ void convolutional(int W, int H, int CIN, int COUT, data_in_t *ptr_in, data_out_
                         for (int kw=0; kw < KERNEL_WIDTH; kw++) {
                             int idx_h = (hi * STRIDE_HEIGHT) + kh;
                             int idx_w = (wi * STRIDE_WIDTH) + kw;
-                            int idx = idx_w + idx_h * W;
+                            int idx = offset + idx_w + idx_h * W;
 
                             int addr_k = kh + kw + (co * KERNEL_HEIGHT * KERNEL_WIDTH) + (ci * KERNEL_HEIGHT * KERNEL_WIDTH);
                             
-                            ptr_out[addr_out].channels[co] += ptr_in[idx].channels[ci] * ptr_kernels[addr_k];
+                            ptr_out[addr_out] += ptr_in[idx] * ptr_kernels[addr_k];
                         }
                     }
-                    ptr_out[addr_out].channels[co] += ptr_bias[co]; // Add bias
+                    ptr_out[addr_out] += ptr_bias[co]; // Add bias
                 }
             }
         }

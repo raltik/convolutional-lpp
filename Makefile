@@ -1,5 +1,5 @@
 CC       := mpicc
-CFLAGS   := -fopenmp
+CFLAGS   := -fopenmp -O0
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
 OBJ_DIR  := ./obj
 APP_DIR  := .
