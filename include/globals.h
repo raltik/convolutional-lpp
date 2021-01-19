@@ -1,7 +1,7 @@
-#define WI 10000
-#define HI 10000
-#define CI 1
-#define CO 1
+#define WI 4000
+#define HI 4000
+#define CI 3
+#define CO 16
 
 #define KERNEL_WIDTH  3
 #define KERNEL_HEIGHT 3
@@ -10,6 +10,3 @@
 #define PADDING_WIDTH 1
 #define PADDING_HEIGHT 1
 
-typedef float data_in_t;
-
-typedef float data_out_t;

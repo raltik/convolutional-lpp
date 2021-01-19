@@ -5,11 +5,11 @@
 #define TAG_IMAGE  1000
 #define TAG_OUTPUT 1001
 
-data_in_t *image;
-data_out_t *output;
+float *image;
+float *output;
 
-data_in_t *image_loc;
-data_out_t *output_loc;
+float *image_loc;
+float *output_loc;
 
 float *bias;
 float *kernels;
@@ -35,8 +35,8 @@ int main(int argc, char **argv) {
     kernels = (float *) malloc(KERNEL_WIDTH * KERNEL_HEIGHT * CI * CO * sizeof(float));
     
     if (rank == 0) { // Root
-        image = (data_in_t *) malloc(WI * HI * sizeof(data_in_t));
-        output = (data_out_t *) malloc(WI * HI * sizeof(data_out_t));
+        image = (float *) malloc(WI * HI * CI * sizeof(float));
+        output = (float *) malloc(WI * HI * CO * sizeof(float));
 
         randomImage(WI, HI, CI, image);
 
@@ -44,24 +44,24 @@ int main(int argc, char **argv) {
         generate_random_kernels(CI, CO, kernels);
 
         for (int i=1; i < procs; i++) {
-            int offset = (i * wi_proc * hi_proc) - 2 * wi_proc;
+            int offset = (i * wi_proc * hi_proc * CI) - 2 * wi_proc * CI;
             MPI_Send(&bias, CO, MPI_FLOAT, i, 1, MPI_COMM_WORLD);
             MPI_Send(&kernels, 3 * 3, MPI_FLOAT, i, 2, MPI_COMM_WORLD);
-            MPI_Send(&image[offset], wi_proc * hi_proc, MPI_FLOAT, i, 3, MPI_COMM_WORLD);
+            MPI_Send(&image[offset], wi_proc * hi_proc * CI, MPI_FLOAT, i, 3, MPI_COMM_WORLD);
         }
         
-        convolutional(wi_proc, hi_proc, CI, CO, image, output, kernels, bias, 0);
+        convolutional(wi_proc, hi_proc, CI, CO, image, output, kernels, bias);
 
     } else {
 
-        image_loc = (data_in_t *) malloc(wi_proc * hi_proc * sizeof(data_in_t));
-        output_loc = (data_in_t *) malloc(wi_proc * hi_proc * sizeof(data_in_t));
+        image_loc = (float *) malloc(wi_proc * hi_proc * CI * sizeof(float));
+        output_loc = (float *) malloc(wi_proc * hi_proc * CO * sizeof(float));
 
-        MPI_Recv(image_loc, wi_proc * hi_proc, MPI_FLOAT, 0, 3, MPI_COMM_WORLD, &status);
+        MPI_Recv(image_loc, wi_proc * hi_proc * CI, MPI_FLOAT, 0, 3, MPI_COMM_WORLD, &status);
         MPI_Recv(bias, CO, MPI_FLOAT, 0, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(kernels, 3*3, MPI_FLOAT, 0, 2, MPI_COMM_WORLD, &status);
         
-        convolutional(wi_proc, hi_proc, CI, CO, image_loc, output_loc, kernels, bias, 0);    
+        convolutional(wi_proc, hi_proc, CI, CO, image_loc, output_loc, kernels, bias);    
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
