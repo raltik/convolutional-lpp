@@ -1,7 +1,7 @@
-#define WI 4000
-#define HI 4000
-#define CI 3
-#define CO 16
+#define WI 1920
+#define HI 1080
+#define CI 16
+#define CO 32
 
 #define KERNEL_WIDTH  3
 #define KERNEL_HEIGHT 3

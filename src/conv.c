@@ -39,25 +39,31 @@ void generate_random_kernels(int CIN, int COUT, float *ptr_kernels) {
 * ptr_out - Pointer to the output
 */
 void convolutional(int W, int H, int CIN, int COUT, float *ptr_in, float *ptr_out, float *ptr_kernels, float *ptr_bias) {
-    int addr_out;
+    
+    int addr_out, addr_k;
+    int idx_h, idx_w, idx;
+    int ci, co, hi, wi, kh, kw;
+
+
     int WIDTH_OUT  = (int) ((W - KERNEL_WIDTH + 2 * PADDING_WIDTH) / STRIDE_WIDTH + 1);
     int HEIGHT_OUT = (int) ((H - KERNEL_HEIGHT + 2 * PADDING_HEIGHT) / STRIDE_HEIGHT + 1);
 
-    #pragma omp parallel for private(addr_out)
-    for (int co=0; co < COUT; co++) {
-        for (int ci=0; ci < CIN; ci++) {
-            for (int hi=0; hi < HEIGHT_OUT; hi++) { 
-                for (int wi=0; wi < WIDTH_OUT; wi++) {
+    #pragma omp parallel for private(ci, co, hi, wi, kh, kw, addr_out, idx_h, idx_w, idx, addr_k)
+    for (ci=0; ci < CIN; ci++) {
+        for (co=0; co < COUT; co++) {
+            addr_out = 0;
+            for (hi=0; hi < HEIGHT_OUT; hi++) { 
+                for (wi=0; wi < WIDTH_OUT; wi++) {
                     addr_out = co + (wi + hi * WIDTH_OUT);
+                    
+                    for (kh=0; kh < KERNEL_HEIGHT; kh++) {
+                        for (kw=0; kw < KERNEL_WIDTH; kw++) {
+                            idx_h = (hi * STRIDE_HEIGHT) + kh;
+                            idx_w = (wi * STRIDE_WIDTH) + kw;
+                            idx = ci + (idx_w + idx_h * W);
 
-                    for (int kh=0; kh < KERNEL_HEIGHT; kh++) {
-                        for (int kw=0; kw < KERNEL_WIDTH; kw++) {
-                            int idx_h = (hi * STRIDE_HEIGHT) + kh;
-                            int idx_w = (wi * STRIDE_WIDTH) + kw;
-                            int idx = ci + (idx_w + idx_h * W);
+                            addr_k = kh + kw + (co * KERNEL_HEIGHT * KERNEL_WIDTH) + (ci * KERNEL_HEIGHT * KERNEL_WIDTH);
 
-                            int addr_k = kh + kw + (co * KERNEL_HEIGHT * KERNEL_WIDTH) + (ci * KERNEL_HEIGHT * KERNEL_WIDTH);
-                            
                             ptr_out[addr_out] += ptr_in[idx] * ptr_kernels[addr_k];
                         }
                     }
