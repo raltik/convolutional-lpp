@@ -1,5 +1,5 @@
 CC       := mpicc
-CFLAGS   := -fopenmp -O0
+CFLAGS   := -fopenmp
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
 OBJ_DIR  := ./obj
 APP_DIR  := .
@@ -22,17 +22,11 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release
+.PHONY: all build clean debug
 
 build:
 	@mkdir -p $(APP_DIR)
 	@mkdir -p $(OBJ_DIR)
-
-debug: CFLAGS += -DDEBUG -g
-debug: all
-
-release: CFLAGS += -O3
-release: all
 
 clean:
 	-@rm -rvf $(OBJ_DIR)
