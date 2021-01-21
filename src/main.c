@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
         printf("Threads per Proc: %2d\n\n", threads);
     }
 
+    MPI_Barrier(MPI_COMM_WORLD);
     double mytime = MPI_Wtime();
     
     wi_proc = WI;
@@ -79,6 +80,20 @@ int main(int argc, char **argv) {
         convolutional(wi_proc, hi_proc, CI, CO, image, output, kernels, bias);
     } else {
         convolutional(wi_proc, hi_proc, CI, CO, image_loc, output_loc, kernels, bias);    
+    }
+
+    if (!rank) {
+        for (int i=1; i < procs; i++) {
+            int size_image_loc = WI * (hi_comm + 2) * CO;
+            if (i == procs - 1) size_image_loc = WI * (hi_comm + 1) * CO;
+            
+            int offset = (i * (hi_comm) - 1) * WI * CO; 
+            MPI_Recv(&output[offset], size_image_loc, MPI_FLOAT, i, TAG_OUTPUT, MPI_COMM_WORLD, &status);
+        }
+    } else {
+        int size_image_loc = WI * (hi_comm + 2) * CO;
+        if (rank == procs - 1) size_image_loc = WI * (hi_comm + 1) * CO;
+        MPI_Send(output_loc, size_image_loc, MPI_FLOAT, 0, TAG_OUTPUT, MPI_COMM_WORLD);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
